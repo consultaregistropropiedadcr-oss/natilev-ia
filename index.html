@@ -1,1 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#c9718a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Natílev IA">
+<title>Natílev IA</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap');
 
+  :root {
+    --bg: #110709;
+    --surface: #1e0d13;
+    --surface2: #2a1119;
+    --surface3: #341520;
+    --rose: #c9718a;
+    --rose-light: #e8a0b4;
+    --rose-pale: #f5d4df;
+    --gold: #d4a96a;
+    --gold-light: #f0cfa0;
+    --text: #f5e8ec;
+    --text-sec: #c4a0ad;
+    --text-muted: #8a6070;
+    --border: rgba(201,113,138,0.15);
+    --border-strong: rgba(201,113,138,0.35);
+    --radius: 16px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%; width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    display: flex; flex-direction: column;
+    height: 100%; width: 100%;
+    max-width: 480px; margin: 0 auto;
+    position: relative;
+  }
+
+  /* HEADER */
+  #header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: calc(var(--safe-top) + 12px) 16px 12px;
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  #header::after {
+    content: '';
+    position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rose), transparent);
+  }
+
+  .logo-mark {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, #341520, #1a0a14);
+    border: 1px solid var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 22px; height: 22px; }
+
+  .header-info { flex: 1; min-width: 0; }
+  .header-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 600;
+    background: linear-gradient(135deg, var(--rose-light), var(--gold-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+  .header-sub {
+    font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em;
+    text-transform: uppercase; margin-top: 1px;
+  }
+
+  .header-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: none; border: 1px solid var(--border);
+    color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.2s;
+  }
+  .icon-btn:hover, .icon-btn:active { background: var(--surface3); border-color: var(--border-strong); color: var(--rose-light); }
+
+  /* STATUS BAR */
+  #status-bar {
+    padding: 6px 16px;
+    background: var(--surface);
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; box-shadow: 0 0 6px #4ade8080; }
+  .status-text { font-size: 11px; color: var(--text-muted); flex: 1; }
+  .model-pill {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px;
+    background: rgba(201,113,138,0.12); color: var(--rose);
+    border: 1px solid rgba(201,113,138,0.25); letter-spacing: 0.04em;
+  }
+
+  /* MESSAGES */
+  #messages {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 16px 14px; display: flex; flex-direction: column; gap: 14px;
+    scroll-behavior: smooth;
+  }
+  #messages::-webkit-scrollbar { width: 3px; }
+  #messages::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  /* Empty */
+  .empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; padding: 32px 16px; text-align: center;
+    animation: fadeIn 0.4s ease;
+  }
+  .empty-icon {
+    width: 64px; height: 64px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .empty-icon svg { width: 30px; height: 30px; }
+  .empty-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 600;
+    background: linear-gradient(135deg, var(--rose-light), var(--gold-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .empty-sub { font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 260px; }
+
+  .suggestions-grid { display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 300px; margin-top: 8px; }
+  .suggestion-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 14px;
+    color: var(--text-sec); font-size: 13px; text-align: left;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .suggestion-btn:active { background: var(--surface3); border-color: var(--border-strong); color: var(--rose-light); transform: scale(0.98); }
+  .s-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* Bubbles */
+  .msg { display: flex; gap: 8px; animation: slideUp 0.25s ease; }
+  .msg.user { flex-direction: row-reverse; }
+
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .av {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; margin-top: 2px;
+  }
+  .av.user { background: rgba(201,113,138,0.2); color: var(--rose-light); border: 1px solid var(--border-strong); font-size: 12px; font-family: 'Cormorant Garamond', serif; font-weight: 600; }
+  .av.ai { background: var(--surface2); border: 1px solid var(--border-strong); }
+  .av.ai svg { width: 16px; height: 16px; }
+
+  .bubble {
+    max-width: calc(100% - 80px); padding: 10px 14px;
+    border-radius: 16px; font-size: 14px; line-height: 1.65;
+    word-break: break-word;
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, rgba(201,113,138,0.22), rgba(201,113,138,0.12));
+    border: 1px solid rgba(201,113,138,0.3);
+    color: var(--text); border-radius: 16px 16px 4px 16px;
+  }
+  .msg.ai .bubble {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 16px 16px 16px 4px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  /* Thinking block */
+  .think-block {
+    background: rgba(212,169,106,0.08); border: 1px solid rgba(212,169,106,0.2);
+    border-radius: 10px; font-size: 12px; color: var(--gold); overflow: hidden;
+  }
+  .think-summary {
+    padding: 7px 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
+    list-style: none; user-select: none;
+  }
+  .think-summary::marker, .think-summary::-webkit-details-marker { display: none; }
+  .think-body { padding: 8px 10px; border-top: 1px solid rgba(212,169,106,0.15); color: var(--gold-light); line-height: 1.6; white-space: pre-wrap; font-size: 12px; }
+
+  /* Typing */
+  .typing-msg { display: flex; gap: 8px; }
+  .typing-bubble {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 16px 16px 16px 4px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .typing-bubble span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--rose); display: inline-block;
+    animation: pulse 1.2s infinite;
+  }
+  .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,60%,100%{opacity:0.3;transform:scale(1)} 30%{opacity:1;transform:scale(1.2)} }
+
+  /* TOOLBAR */
+  #toolbar {
+    padding: 8px 14px; background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; gap: 6px; overflow-x: auto;
+    flex-shrink: 0;
+  }
+  #toolbar::-webkit-scrollbar { display: none; }
+  .tool-chip {
+    flex-shrink: 0; padding: 5px 12px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 12px; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tool-chip:active { transform: scale(0.96); }
+  .tool-chip.active {
+    background: rgba(201,113,138,0.15);
+    border-color: rgba(201,113,138,0.4); color: var(--rose-light);
+  }
+
+  /* INPUT */
+  #input-wrap {
+    padding: 10px 14px calc(var(--safe-bottom) + 10px);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px; align-items: flex-end;
+    flex-shrink: 0;
+  }
+  #user-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 11px 14px;
+    color: var(--text); font-size: 15px; font-family: 'Inter', sans-serif;
+    resize: none; min-height: 44px; max-height: 120px; line-height: 1.4;
+    outline: none; transition: border 0.2s;
+  }
+  #user-input::placeholder { color: var(--text-muted); }
+  #user-input:focus { border-color: rgba(201,113,138,0.5); }
+
+  #send-btn {
+    width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--rose), #a84f68);
+    border: none; color: white; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  #send-btn:active { transform: scale(0.94); opacity: 0.9; }
+  #send-btn:disabled { opacity: 0.4; }
+  #send-btn svg { width: 20px; height: 20px; }
+
+  /* Settings panel */
+  #settings-panel {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg); z-index: 100; display: none;
+    flex-direction: column; overflow-y: auto;
+  }
+  #settings-panel.open { display: flex; }
+  .settings-header {
+    padding: calc(var(--safe-top) + 14px) 16px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+  .settings-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--text); flex: 1; }
+  .settings-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 20px; }
+  .setting-group h3 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .setting-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .setting-item label { font-size: 13px; color: var(--text-sec); display: flex; justify-content: space-between; align-items: center; }
+  .setting-item input[type=text], .setting-item textarea {
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+    color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif;
+    outline: none; width: 100%; resize: none;
+  }
+  .setting-item textarea { min-height: 80px; line-height: 1.5; }
+  .setting-item input:focus, .setting-item textarea:focus { border-color: rgba(201,113,138,0.5); }
+
+  .toggle { width: 42px; height: 24px; border-radius: 12px; background: var(--surface3); border: 1px solid var(--border); cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: rgba(201,113,138,0.5); border-color: var(--rose); }
+  .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--text-muted); top: 2px; left: 2px; transition: all 0.2s; }
+  .toggle.on::after { left: 20px; background: var(--rose-light); }
+
+  .save-btn {
+    background: linear-gradient(135deg, var(--rose), #a84f68);
+    border: none; color: white; border-radius: 12px; padding: 13px;
+    font-size: 15px; font-weight: 500; cursor: pointer; width: 100%;
+    font-family: 'Inter', sans-serif; transition: opacity 0.2s;
+  }
+  .save-btn:active { opacity: 0.85; }
+
+  .install-banner {
+    background: linear-gradient(135deg, rgba(201,113,138,0.15), rgba(212,169,106,0.1));
+    border: 1px solid rgba(201,113,138,0.3); border-radius: 12px; padding: 14px;
+    font-size: 13px; color: var(--text-sec); line-height: 1.6;
+  }
+  .install-banner strong { color: var(--rose-light); display: block; margin-bottom: 4px; font-size: 14px; }
+  .install-banner ol { padding-left: 16px; margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .install-banner li { color: var(--text-muted); }
+
+  .version-text { font-size: 11px; color: var(--text-muted); text-align: center; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 3 L20 8 L20 16 L12 21 L4 16 L4 8 Z" fill="none" stroke="#c9718a" stroke-width="1.2"/>
+        <text x="12" y="16" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="11" font-weight="600" fill="#e8a0b4">N</text>
+      </svg>
+    </div>
+    <div class="header-info">
+      <div class="header-title">Natílev IA</div>
+      <div class="header-sub">Estética Facial Inteligente</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="clearChat()" title="Limpiar chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+        </svg>
+      </button>
+      <button class="icon-btn" onclick="openSettings()" title="Configuración">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div id="status-bar">
+    <div class="status-dot"></div>
+    <div class="status-text" id="status-text">Lista para ayudarte</div>
+    <div class="model-pill">Claude Sonnet</div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="messages">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 30 30" fill="none">
+          <path d="M15 4 L24 9 L24 21 L15 26 L6 21 L6 9 Z" fill="none" stroke="#c9718a" stroke-width="1.2"/>
+          <text x="15" y="20" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="13" font-weight="600" fill="#e8a0b4">N</text>
+        </svg>
+      </div>
+      <div class="empty-title">Hola, soy Natílev IA</div>
+      <div class="empty-sub">Tu asistente de estética facial. Pregúntame sobre tratamientos, cuidados o lo que necesites.</div>
+      <div class="suggestions-grid">
+        <button class="suggestion-btn" onclick="suggest('¿Qué tratamientos faciales recomiendan para piel grasa?')"><span class="s-icon">✨</span> Tratamientos para piel grasa</button>
+        <button class="suggestion-btn" onclick="suggest('¿Cuántas sesiones necesito para ver resultados?')"><span class="s-icon">📅</span> ¿Cuántas sesiones necesito?</button>
+        <button class="suggestion-btn" onclick="suggest('¿Cómo debo cuidar mi piel después de un tratamiento facial?')"><span class="s-icon">🌿</span> Cuidados post-tratamiento</button>
+        <button class="suggestion-btn" onclick="suggest('¿Qué diferencia hay entre hidratación y nutrición facial?')"><span class="s-icon">💧</span> Hidratación vs nutrición facial</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div id="toolbar">
+    <div class="tool-chip" id="chip-think" onclick="toggleChip('think')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><circle cx="8" cy="8" r="6"/><path d="M6 7c0-1 .5-2 2-2s2 1 2 2c0 .8-.5 1.4-1.2 1.7L8 9.5"/><circle cx="8" cy="11.5" r=".5" fill="currentColor" stroke="none"/></svg>
+      Razonamiento
+    </div>
+    <div class="tool-chip active" id="chip-normal" onclick="setLen('normal')">Normal</div>
+    <div class="tool-chip" id="chip-short" onclick="setLen('short')">Breve</div>
+    <div class="tool-chip" id="chip-detail" onclick="setLen('detail')">Detallado</div>
+    <div class="tool-chip" id="chip-formal" onclick="setTone('formal')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 6h6M5 9h4"/></svg>
+      Formal
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div id="input-wrap">
+    <textarea id="user-input" placeholder="Escribe tu consulta..." rows="1"></textarea>
+    <button id="send-btn" onclick="sendMsg()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div id="settings-panel">
+    <div class="settings-header">
+      <button class="icon-btn" onclick="closeSettings()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <h2>Configuración</h2>
+    </div>
+    <div class="settings-body">
+
+      <div class="install-banner">
+        <strong>📲 Instalar en tu teléfono</strong>
+        <b>iOS (Safari):</b><ol><li>Toca el botón Compartir ⎙</li><li>Selecciona "Agregar a pantalla de inicio"</li><li>Toca "Agregar"</li></ol>
+        <br><b>Android (Chrome):</b><ol><li>Toca el menú ⋮</li><li>Selecciona "Agregar a pantalla de inicio"</li><li>Confirma</li></ol>
+      </div>
+
+      <div class="setting-group">
+        <h3>Personalidad del asistente</h3>
+        <div class="setting-item">
+          <label>Nombre del negocio</label>
+          <input type="text" id="cfg-biz" placeholder="Natílev Estética Facial" value="Natílev Estética Facial">
+        </div>
+        <div class="setting-item">
+          <label>
+            Razonamiento extendido
+            <div class="toggle" id="toggle-think" onclick="toggleSettingThink()"></div>
+          </label>
+        </div>
+        <div class="setting-item">
+          <label>Instrucciones adicionales</label>
+          <textarea id="cfg-extra" placeholder="Ej: Siempre menciona que los precios se consultan directamente..."></textarea>
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="saveSettings()">Guardar cambios</button>
+      <div class="version-text">Natílev IA v1.0 · Powered by Claude</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// State
+let history = [];
+let useThinking = false;
+let length = 'normal';
+let tone = 'normal';
+let isLoading = false;
+let settings = {
+  biz: 'Natílev Estética Facial',
+  extraInstructions: ''
+};
+
+// Load settings
+try {
+  const s = JSON.parse(localStorage.getItem('natilev-cfg') || '{}');
+  if (s.biz) settings.biz = s.biz;
+  if (s.extraInstructions) settings.extraInstructions = s.extraInstructions;
+} catch(e) {}
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// Textarea auto-resize
+const ta = document.getElementById('user-input');
+ta.addEventListener('input', () => {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+});
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+function toggleChip(id) {
+  useThinking = !useThinking;
+  document.getElementById('chip-think').classList.toggle('active', useThinking);
+  document.getElementById('toggle-think').classList.toggle('on', useThinking);
+}
+
+function setLen(l) {
+  length = l;
+  ['normal','short','detail'].forEach(x => document.getElementById('chip-'+x).classList.remove('active'));
+  document.getElementById('chip-'+l).classList.add('active');
+}
+
+function setTone(t) {
+  tone = tone === t ? 'normal' : t;
+  document.getElementById('chip-formal').classList.toggle('active', tone === 'formal');
+}
+
+function suggest(text) {
+  ta.value = text;
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  sendMsg();
+}
+
+function clearChat() {
+  if (isLoading) return;
+  history = [];
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = `<div class="empty-state">
+    <div class="empty-icon"><svg viewBox="0 0 30 30" fill="none"><path d="M15 4 L24 9 L24 21 L15 26 L6 21 L6 9 Z" fill="none" stroke="#c9718a" stroke-width="1.2"/><text x="15" y="20" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="13" font-weight="600" fill="#e8a0b4">N</text></svg></div>
+    <div class="empty-title">Conversación nueva</div>
+    <div class="empty-sub">¿En qué te puedo ayudar hoy?</div>
+  </div>`;
+  setStatus('Lista para ayudarte');
+}
+
+function setStatus(txt) {
+  document.getElementById('status-text').textContent = txt;
+}
+
+function addBubble(role, text, thinking) {
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+  const msgs = document.getElementById('messages');
+
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+
+  const av = document.createElement('div');
+  av.className = `av ${role}`;
+  if (role === 'ai') {
+    av.innerHTML = `<svg viewBox="0 0 30 30" fill="none"><path d="M15 4 L24 9 L24 21 L15 26 L6 21 L6 9 Z" fill="none" stroke="#c9718a" stroke-width="1.2"/><text x="15" y="20" text-anchor="middle" font-family='Cormorant Garamond,serif' font-size="11" font-weight="600" fill="#e8a0b4">N</text></svg>`;
+  } else {
+    av.textContent = 'Tú';
+    av.style.fontSize = '10px';
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+
+  const textDiv = document.createElement('div');
+  textDiv.textContent = text;
+  bubble.appendChild(textDiv);
+
+  if (thinking) {
+    const det = document.createElement('details');
+    det.className = 'think-block';
+    det.innerHTML = `<summary class="think-summary">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><circle cx="8" cy="8" r="6"/><path d="M6 7c0-1 .5-2 2-2s2 1 2 2c0 .8-.5 1.4-1.2 1.7L8 9.5"/><circle cx="8" cy="11.5" r=".5" fill="currentColor" stroke="none"/></svg>
+      Ver razonamiento
+    </summary><div class="think-body">${thinking}</div>`;
+    bubble.appendChild(det);
+  }
+
+  wrap.appendChild(av);
+  wrap.appendChild(bubble);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'typing-msg'; wrap.id = 'typing';
+  const av = document.createElement('div');
+  av.className = 'av ai';
+  av.innerHTML = `<svg viewBox="0 0 30 30" fill="none"><path d="M15 4 L24 9 L24 21 L15 26 L6 21 L6 9 Z" fill="none" stroke="#c9718a" stroke-width="1.2"/><text x="15" y="20" text-anchor="middle" font-family='Cormorant Garamond,serif' font-size="11" font-weight="600" fill="#e8a0b4">N</text></svg>`;
+  const b = document.createElement('div');
+  b.className = 'typing-bubble';
+  b.innerHTML = '<span></span><span></span><span></span>';
+  wrap.appendChild(av); wrap.appendChild(b);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+const lengthMap = {
+  short: 'Responde muy brevemente, máximo 2-3 oraciones.',
+  normal: 'Responde de forma clara y completa.',
+  detail: 'Responde con detalle, ejemplos y explicaciones profundas.'
+};
+
+async function sendMsg() {
+  if (isLoading) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = ''; input.style.height = 'auto';
+  document.getElementById('send-btn').disabled = true;
+  isLoading = true;
+
+  addBubble('user', text);
+  history.push({ role: 'user', content: text });
+
+  setStatus('Procesando...');
+  showTyping();
+
+  const toneNote = tone === 'formal' ? 'Usa un tono profesional y formal.' : 'Usa un tono amable y cercano.';
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-CR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const hora = now.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+
+  const system = `Eres la asistente de inteligencia artificial de ${settings.biz}, un centro de estética facial en Costa Rica. Tu nombre es Natílev IA.
+Hoy es ${fecha} y son las ${hora} (hora de Costa Rica).
+
+Especialidades: tratamientos faciales, cuidado de la piel, limpieza facial, hidratación, anti-envejecimiento, peeling, radiofrecuencia, microagujas, y bienestar de la piel.
+
+${lengthMap[length]} ${toneNote}
+
+Habla siempre en español de Costa Rica. Sé empática, profesional y enfocada en el bienestar de la piel del cliente.
+${settings.extraInstructions ? '\n' + settings.extraInstructions : ''}`;
+
+  const messages = [
+    { role: 'system', content: system },
+    ...history
+  ];
+
+  const body = {
+    messages,
+    system
+  };
+
+  try {
+    const res = await fetch('https://natilev-proxy.consultaregistropropiedadcr.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) {
+      addBubble('ai', '⚠️ ' + (data.error.message || JSON.stringify(data.error)));
+      history.pop();
+      setStatus('Error — intenta de nuevo');
+    } else {
+      const reply = data.content?.[0]?.text || '';
+      addBubble('ai', reply);
+      history.push({ role: 'assistant', content: reply });
+      setStatus('Lista para ayudarte');
+    }
+  } catch(e) {
+    removeTyping();
+    addBubble('ai', '⚠️ Sin conexión. Verifica el internet e intenta de nuevo.');
+    history.pop();
+    setStatus('Sin conexión');
+  }
+
+  document.getElementById('send-btn').disabled = false;
+  isLoading = false;
+}
+
+function openSettings() {
+  document.getElementById('cfg-biz').value = settings.biz;
+  document.getElementById('cfg-extra').value = settings.extraInstructions;
+  document.getElementById('toggle-think').classList.toggle('on', useThinking);
+  document.getElementById('settings-panel').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+}
+
+function toggleSettingThink() {
+  useThinking = !useThinking;
+  document.getElementById('toggle-think').classList.toggle('on', useThinking);
+  document.getElementById('chip-think').classList.toggle('active', useThinking);
+}
+
+function saveSettings() {
+  settings.biz = document.getElementById('cfg-biz').value || 'Natílev Estética Facial';
+  settings.extraInstructions = document.getElementById('cfg-extra').value;
+  try { localStorage.setItem('natilev-cfg', JSON.stringify(settings)); } catch(e) {}
+  closeSettings();
+}
+</script>
+</body>
+</html>
